@@ -11,6 +11,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { TableSchema, GeneratedCode } from "@/types/schema";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -22,10 +23,11 @@ export default function Home() {
     defaultValues: {
       tableName: "",
       namespace: process.env.NEXT_PUBLIC_NAMESPACE || "Taz.Services",
+      ignoreLastSChar: true,
     },
   });
 
-  const onSubmit = async (data: { tableName: string, namespace:string }) => {
+  const onSubmit = async (data: { tableName: string, namespace:string, ignoreLastSChar: boolean }) => {
     setIsLoading(true);
     try {
       if (!data.tableName) {
@@ -42,7 +44,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ tableName: data.tableName, namespace: data.namespace }),
+        body: JSON.stringify({ tableName: data.tableName, namespace: data.namespace, ignoreLastSChar: data.ignoreLastSChar }),
       });
 
       const result = await response.json();
@@ -102,6 +104,31 @@ export default function Home() {
                     </FormItem>
                   )}
                 />
+                
+                <FormField
+                  control={form.control}
+                  name="ignoreLastSChar" // Checkbox için uygun bir isim verin
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl >
+                          <Checkbox
+                            checked={field.value} // field.value yerine field.checked kullanılır
+                            onCheckedChange={field.onChange} // Değişiklikler için field.onChange kullanılır
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Ignore last &quot;s&quot; character in table name
+                          </FormLabel>
+                          <FormDescription>
+                            Bu seçeneği işaretlerseniz, C# için üretilen tüm class isimlerinde eğer varsa son s harfi kaldırılacaktır. 
+                          </FormDescription>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                      )}
+                    />
+                
                 <FormField
                   control={form.control}
                   name="namespace"
