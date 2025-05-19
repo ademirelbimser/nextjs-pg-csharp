@@ -34,3 +34,31 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Docker installation
+
+Define your postgresql connection in 
+# .env file
+````
+DATABASE_URL=postgres://username:password@localhost:5432/postgre
+NEXT_PUBLIC_NAMESPACE=Taz.Services
+````
+# docker-compose.yml file
+````
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://username:password@localhost:5432/postgre
+    restart: unless-stopped
+````
+````
+> docker-compose build --no-cache
+> docker-compose up -d
+
