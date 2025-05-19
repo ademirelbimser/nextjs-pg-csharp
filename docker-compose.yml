@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - "3007:3000"
+    environment:
+      - DATABASE_URL=postgres://ademirel:7442371Ad.@192.168.68.105:5432/taz
+    restart: unless-stopped

@@ -1,0 +1,57 @@
+import { NextResponse } from 'next/server';
+import { getTableSchema } from '@/lib/db';
+import { 
+  generateEntityClass, 
+  generateRepositoryInterface, 
+  generateRepositoryImplementation,
+  generateCommands,
+  generateQueries,
+  generateHandlers
+} from '@/lib/csharpGenerator';
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { tableName } = body;
+    const { namespace } = body;
+
+    if (!tableName) {
+      return NextResponse.json({ message: 'Table name is required' }, { status: 400 });
+    }
+    if (!namespace) {
+      return NextResponse.json({ message: 'Namespace is required' }, { status: 400 });
+    }
+    
+    // Get table schema
+    const schema = await getTableSchema(tableName);
+
+    if (!schema.success) {
+      return NextResponse.json({ message: schema.error || 'Failed to get table schema' }, { status: 400 });
+    }
+
+    // Generate C# code
+    const entityCode = generateEntityClass(schema.tableName!, schema.columns!, schema.primaryKeys!, namespace);
+    const interfaceCode = generateRepositoryInterface(schema.tableName!, schema.columns!, schema.primaryKeys!, namespace);
+    const repositoryCode = generateRepositoryImplementation(schema.tableName!, schema.columns!, schema.primaryKeys!, namespace);
+    const commandsCode = generateCommands(schema.tableName!, schema.columns!, schema.primaryKeys!, namespace);
+    const queriesCode = generateQueries(schema.tableName!, schema.columns!, schema.primaryKeys!, namespace);
+    const handlersCode = generateHandlers(schema.tableName!, schema.columns!, schema.primaryKeys!, namespace);
+
+    // Return generated code
+    return NextResponse.json({
+      schema,
+      generatedCode: {
+        entity: entityCode,
+        interface: interfaceCode,
+        repository: repositoryCode,
+        commands: commandsCode,
+        queries: queriesCode,
+        handlers: handlersCode
+      }
+    });
+  } catch (error) {
+    console.error('API error:', error);
+    const errorMessage = (error instanceof Error) ? error.message : String(error);
+    return NextResponse.json({ message: 'Internal server error', error: errorMessage }, { status: 500 });
+  }
+}
