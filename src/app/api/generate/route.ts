@@ -14,6 +14,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { tableName } = body;
     const { namespace } = body;
+    const { ignoreLastSChar } = body;
 
     if (!tableName) {
       return NextResponse.json({ message: 'Table name is required' }, { status: 400 });
@@ -28,14 +29,22 @@ export async function POST(request: Request) {
     if (!schema.success) {
       return NextResponse.json({ message: schema.error || 'Failed to get table schema' }, { status: 400 });
     }
+    
+    let puretableName = schema.tableName || tableName;
+    // Check if the table name ends with 's' and ignore it if specified
+    if (ignoreLastSChar) {
+      puretableName = puretableName.slice(0, -1);
+    }
+    //return NextResponse.json({ message: puretableName}, { status: 400 });
+
 
     // Generate C# code
-    const entityCode = generateEntityClass(schema.tableName!, schema.columns!, schema.primaryKeys!, namespace);
-    const interfaceCode = generateRepositoryInterface(schema.tableName!, schema.columns!, schema.primaryKeys!, namespace);
-    const repositoryCode = generateRepositoryImplementation(schema.tableName!, schema.columns!, schema.primaryKeys!, namespace);
-    const commandsCode = generateCommands(schema.tableName!, schema.columns!, schema.primaryKeys!, namespace);
-    const queriesCode = generateQueries(schema.tableName!, schema.columns!, schema.primaryKeys!, namespace);
-    const handlersCode = generateHandlers(schema.tableName!, schema.columns!, schema.primaryKeys!, namespace);
+    const entityCode = generateEntityClass(puretableName, schema.columns!, schema.primaryKeys!, namespace);
+    const interfaceCode = generateRepositoryInterface(puretableName!, schema.columns!, schema.primaryKeys!, namespace);
+    const repositoryCode = generateRepositoryImplementation(puretableName, schema.columns!, schema.primaryKeys!, namespace);
+    const commandsCode = generateCommands(puretableName, schema.columns!, schema.primaryKeys!, namespace);
+    const queriesCode = generateQueries(puretableName, schema.columns!, schema.primaryKeys!, namespace);
+    const handlersCode = generateHandlers(puretableName, schema.columns!, schema.primaryKeys!, namespace);
 
     // Return generated code
     return NextResponse.json({
